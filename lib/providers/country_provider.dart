@@ -1,20 +1,37 @@
 import 'package:flutter/material.dart';
+
 import '../models/country_model.dart';
+import '../services/country_service.dart';
 
 class CountryProvider extends ChangeNotifier {
-  List<CountryModel> _countries = [];
+  final CountryService _countryService = CountryService();
 
-  List<CountryModel> get countries => List.unmodifiable(_countries);
+  List<CountryModel> _countries = [];
 
   bool _isLoading = false;
   String? _errorMessage;
 
+  List<CountryModel> get countries => _countries;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  Future<void> loadCountries() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _countries = await _countryService.fetchCountries();
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void setCountries(List<CountryModel> countries) {
     _countries = countries;
-    _errorMessage = null;
     notifyListeners();
   }
 

@@ -2,56 +2,50 @@ class MatchModel {
   final String id;
   final String homeTeam;
   final String awayTeam;
-  final String? homeTeamLogo;
-  final String? awayTeamLogo;
-  final String? competition;
-  final DateTime? matchDate;
-  final String? status;
+  final String homeTeamCode;
+  final String awayTeamCode;
   final int? homeScore;
   final int? awayScore;
+  final String category;
 
   const MatchModel({
     required this.id,
     required this.homeTeam,
     required this.awayTeam,
-    this.homeTeamLogo,
-    this.awayTeamLogo,
-    this.competition,
-    this.matchDate,
-    this.status,
+    required this.homeTeamCode,
+    required this.awayTeamCode,
     this.homeScore,
     this.awayScore,
+    required this.category,
   });
 
-  factory MatchModel.fromJson(Map<String, dynamic> json) {
-    return MatchModel(
-      id: json['id']?.toString() ?? '',
-      homeTeam: json['home_team'] ?? '',
-      awayTeam: json['away_team'] ?? '',
-      homeTeamLogo: json['home_team_logo'],
-      awayTeamLogo: json['away_team_logo'],
-      competition: json['competition'],
-      matchDate: json['match_date'] != null
-          ? DateTime.tryParse(json['match_date'])
-          : null,
-      status: json['status'],
-      homeScore: (json['home_score'] as num?)?.toInt(),
-      awayScore: (json['away_score'] as num?)?.toInt(),
-    );
-  }
+  factory MatchModel.fromJson(
+    Map<String, dynamic> json, {
+    required String category,
+  }) {
+    final teamA = json['team_A'] as Map<String, dynamic>? ?? {};
+    final teamB = json['team_B'] as Map<String, dynamic>? ?? {};
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'home_team': homeTeam,
-      'away_team': awayTeam,
-      'home_team_logo': homeTeamLogo,
-      'away_team_logo': awayTeamLogo,
-      'competition': competition,
-      'match_date': matchDate?.toIso8601String(),
-      'status': status,
-      'home_score': homeScore,
-      'away_score': awayScore,
-    };
+    final rawScores = json['scores'] as List<dynamic>? ?? [];
+
+    // API mengirim skor dalam bentuk [[3, 1]].
+    final List<dynamic> scores;
+
+    if (rawScores.isNotEmpty && rawScores.first is List) {
+      scores = rawScores.first as List<dynamic>;
+    } else {
+      scores = rawScores;
+    }
+
+    return MatchModel(
+      id: json['mid']?.toString() ?? '',
+      homeTeam: teamA['short_name']?.toString() ?? 'Unknown',
+      awayTeam: teamB['short_name']?.toString() ?? 'Unknown',
+      homeTeamCode: teamA['tla_name']?.toString() ?? '',
+      awayTeamCode: teamB['tla_name']?.toString() ?? '',
+      homeScore: scores.isNotEmpty ? int.tryParse(scores[0].toString()) : null,
+      awayScore: scores.length > 1 ? int.tryParse(scores[1].toString()) : null,
+      category: category,
+    );
   }
 }
