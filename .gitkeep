@@ -1,0 +1,16 @@
+$folders = @(
+    "lib/models",
+    "lib/services",
+    "lib/repositories",
+    "lib/providers",
+    "lib/screens/auth",
+    "lib/screens/dashboard",
+    "lib/screens/players",
+    "lib/screens/attendance",
+    "lib/screens/profile",
+    "lib/widgets"
+)
+
+foreach ($folder in $folders) {
+    New-Item -ItemType File -Force -Path "$folder/.gitkeep"
+}
