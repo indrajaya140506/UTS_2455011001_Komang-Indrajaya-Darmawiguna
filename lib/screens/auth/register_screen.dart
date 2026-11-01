@@ -2,8 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -35,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  // Memilih logo dari galeri
+  // Memilih logo dari galeri.
   Future<void> _pickLogo() async {
     if (_isPickingLogo) return;
 
@@ -78,21 +80,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Validasi form pendaftaran
-  void _register() {
+  // Proses registrasi menggunakan Supabase.
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Form pendaftaran berhasil divalidasi.')),
+    final authProvider = context.read<AuthProvider>();
+
+    final success = await authProvider.register(
+      clubName: _clubController.text.trim(),
+      password: _passwordController.text,
+      coachName: _coachController.text.trim(),
+      logoBytes: _selectedLogoBytes,
     );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
+    if (!mounted) return;
+
+    if (success) {
+      // Mengakhiri sesi setelah registrasi agar pengguna
+      // dapat masuk melalui halaman Login.
+      await authProvider.logout();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pendaftaran klub berhasil! Silakan masuk.'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Pendaftaran gagal.'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
-  // Input field
+  // Input field.
   Widget _buildInput({
     required String label,
     required String hint,
@@ -143,7 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Upload logo
+  // Upload logo.
   Widget _buildLogoPicker() {
     return Row(
       children: [
@@ -181,10 +214,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
-                onPressed: _pickLogo,
+                onPressed: _isPickingLogo ? null : _pickLogo,
                 icon: const Icon(Icons.file_upload_outlined, size: 18),
                 label: Text(
-                  _selectedLogoBytes == null ? 'Pilih Logo' : 'Ganti Logo',
+                  _isPickingLogo
+                      ? 'Memilih...'
+                      : _selectedLogoBytes == null
+                      ? 'Pilih Logo'
+                      : 'Ganti Logo',
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.navy,
@@ -210,7 +247,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Form pendaftaran
+  // Form pendaftaran.
   Widget _buildRegisterForm() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -237,7 +274,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'Lengkapi informasi klub untuk memulai.',
               style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
             ),
-
             const SizedBox(height: 24),
 
             _buildLogoPicker(),
@@ -296,24 +332,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             const SizedBox(height: 28),
 
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _register,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.navy,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Consumer<AuthProvider>(
+              builder: (context, auth, child) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: auth.isLoading || _isPickingLogo
+                        ? null
+                        : _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.navy,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: auth.isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Daftar Sekarang',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
-                ),
-                child: const Text(
-                  'Daftar Sekarang',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              ),
+                );
+              },
             ),
 
             const SizedBox(height: 18),
@@ -357,7 +411,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Informasi VCLUB untuk layout lebar
+  // Informasi VCLUB untuk layout lebar.
   Widget _buildBrandSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

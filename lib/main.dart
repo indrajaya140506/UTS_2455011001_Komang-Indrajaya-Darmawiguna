@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/config/supabase_config.dart';
 
 // Providers
 import 'providers/auth_provider.dart';
@@ -13,7 +15,17 @@ import 'providers/match_provider.dart';
 // Screens
 import 'screens/auth/login_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  print('SUPABASE URL: ${SupabaseConfig.url}');
+  print('SUPABASE KEY TERISI: ${SupabaseConfig.publishableKey.isNotEmpty}');
+
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
+
   runApp(const VClubApp());
 }
 
