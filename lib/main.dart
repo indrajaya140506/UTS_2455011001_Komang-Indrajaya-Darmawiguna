@@ -16,7 +16,7 @@ class VClubApp extends StatelessWidget {
       title: 'VCLUB',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: LoginScreen(),
     );
   }
 }
