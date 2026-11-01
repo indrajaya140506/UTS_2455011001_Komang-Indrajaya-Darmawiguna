@@ -11,6 +11,7 @@ import 'providers/player_provider.dart';
 import 'providers/attendance_provider.dart';
 import 'providers/country_provider.dart';
 import 'providers/match_provider.dart';
+import 'providers/club_provider.dart';
 
 // Screens
 import 'screens/auth/login_screen.dart';
@@ -41,6 +42,7 @@ class VClubApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
         ChangeNotifierProvider(create: (_) => CountryProvider()),
         ChangeNotifierProvider(create: (_) => MatchProvider()),
+        ChangeNotifierProvider(create: (_) => ClubProvider()),
       ],
       child: MaterialApp(
         title: 'VCLUB',

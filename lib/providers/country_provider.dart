@@ -16,12 +16,17 @@ class CountryProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> loadCountries() async {
+    // Mencegah request berulang.
+    if (_isLoading) return;
+
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _countries = await _countryService.fetchCountries();
+      final result = await _countryService.fetchCountries();
+
+      _countries = result;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

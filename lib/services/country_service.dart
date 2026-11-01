@@ -1,33 +1,74 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../models/country_model.dart';
 
 class CountryService {
-  static const String _baseUrl = 'https://restcountries.com/v3.1';
+  static const String _baseUrl = 'https://api.restcountries.com/countries/v5';
+
+  static const String _apiKey = 'rc_live_ebce34443fc142ff961aaa0ab2c57432';
 
   Future<List<CountryModel>> fetchCountries() async {
-    final url = Uri.parse('$_baseUrl/all?fields=name,cca2,flags,region');
-
     try {
-      final response = await http.get(url);
+      final List<dynamic> allCountries = [];
+      int offset = 0;
+      bool hasMore = true;
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+      while (hasMore) {
+        final url = Uri.parse(
+          '$_baseUrl?limit=100&offset=$offset'
+          '&response_fields=names.common,codes.alpha_2,flag.emoji',
+        );
 
-        final countries = data
-            .map((json) => CountryModel.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final response = await http.get(
+          url,
+          headers: {
+            'Authorization': 'Bearer $_apiKey',
+            'Accept': 'application/json',
+          },
+        );
 
-        countries.sort((a, b) => a.name.compareTo(b.name));
+        if (response.statusCode != 200) {
+          throw Exception('HTTP ${response.statusCode}: ${response.body}');
+        }
 
-        return countries;
+        final Map<String, dynamic> body = jsonDecode(response.body);
+
+        final dynamic rawData = body['data'];
+
+        final List<dynamic> pageData = rawData is Map
+            ? (rawData['objects'] as List? ?? [])
+            : [];
+
+        if (pageData.isEmpty) break;
+
+        allCountries.addAll(pageData);
+
+        // META BERADA DI DALAM DATA
+        final meta = rawData['meta'] as Map<String, dynamic>?;
+
+        hasMore = meta?['more'] == true;
+
+        offset += pageData.length;
+
+        print('Offset: $offset');
+        print('Masih ada data: $hasMore');
       }
 
-      throw Exception('Gagal mengambil data negara: ${response.statusCode}');
+      final countries = allCountries
+          .map((json) => CountryModel.fromJson(json))
+          .where(
+            (country) => country.name.isNotEmpty && country.code.isNotEmpty,
+          )
+          .toList();
+
+      countries.sort((a, b) => a.name.compareTo(b.name));
+
+      print('Total negara berhasil dimuat: ${countries.length}');
+      print('Indonesia ditemukan: ${countries.any((c) => c.code == 'ID')}');
+
+      return countries;
     } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
+      throw Exception('Gagal mengambil data negara: $e');
     }
   }
 }

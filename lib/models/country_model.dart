@@ -13,14 +13,19 @@ class CountryModel {
 
   factory CountryModel.fromJson(Map<String, dynamic> json) {
     return CountryModel(
-      name: json['name']?['common'] ?? '',
-      code: json['cca2'] ?? '',
-      flagUrl: json['flags']?['png'],
+      name: json['names']?['common'] ?? '',
+      code: json['codes']?['alpha_2'] ?? '',
+      flagUrl: json['flag']?['emoji'],
       region: json['region'],
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'cca2': code, 'flagUrl': flagUrl, 'region': region};
+    return {
+      'names': {'common': name},
+      'codes': {'alpha_2': code},
+      'flag': {'emoji': flagUrl},
+      'region': region,
+    };
   }
 }
