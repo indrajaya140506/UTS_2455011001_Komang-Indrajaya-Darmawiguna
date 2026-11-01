@@ -6,24 +6,23 @@ class PlayerRepository {
 
   PlayerRepository(this._playerService);
 
-  // ==========================================
-  // GET DATA PEMAIN
-  // ==========================================
+  // GET
   Future<List<PlayerModel>> getPlayers() {
     return _playerService.getPlayers();
   }
 
-  // ==========================================
-  // CREATE DATA PEMAIN
-  // ==========================================
+  // CREATE
   Future<PlayerModel> createPlayer(PlayerModel player) {
     return _playerService.createPlayer(player);
   }
 
-  // ==========================================
-  // UPDATE DATA PEMAIN
-  // ==========================================
+  // UPDATE
   Future<PlayerModel> updatePlayer(PlayerModel player) {
     return _playerService.updatePlayer(player);
+  }
+
+  // DELETE
+  Future<void> deletePlayer(String id) {
+    return _playerService.deletePlayer(id);
   }
 }

@@ -18,6 +18,8 @@ class PlayersScreen extends StatefulWidget {
 class _PlayersScreenState extends State<PlayersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
+  static const Color navy = Color(0xFF142B4A);
+
   String _selectedPosition = 'Semua';
 
   final List<String> _positions = [
@@ -46,6 +48,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
     super.dispose();
   }
 
+  // FILTER PEMAIN
+
   List<PlayerModel> _filterPlayers(List<PlayerModel> players) {
     final query = _searchController.text.toLowerCase();
 
@@ -61,6 +65,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
     }).toList();
   }
 
+  // MAIN BUILD
+
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
@@ -69,81 +75,170 @@ class _PlayersScreenState extends State<PlayersScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: ResponsiveLayout(
-          maxWidth: 1200,
-          child: Consumer<PlayerProvider>(
-            builder: (context, provider, child) {
-              final players = _filterPlayers(provider.players);
+        child: Column(
+          children: [
+            // TRANSPARENT HEADER
+            _buildHeader(isMobile),
 
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(isMobile),
-                    const SizedBox(height: 24),
+            // SCROLLABLE CONTENT
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = constraints.maxWidth;
 
-                    _buildSearchField(),
-                    const SizedBox(height: 16),
+                  final horizontalPadding = width < 600
+                      ? 20.0
+                      : width < 1024
+                      ? 32.0
+                      : 40.0;
 
-                    _buildPositionFilter(),
-                    const SizedBox(height: 12),
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            24,
+                            horizontalPadding,
+                            24,
+                          ),
+                          child: Consumer<PlayerProvider>(
+                            builder: (context, provider, child) {
+                              final players = _filterPlayers(provider.players);
 
-                    _buildAddButton(),
-                    const SizedBox(height: 24),
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSearchField(),
+                                  const SizedBox(height: 16),
 
-                    _buildPlayerSummary(players.length),
-                    const SizedBox(height: 16),
+                                  _buildPositionFilter(),
+                                  const SizedBox(height: 12),
 
-                    if (provider.isLoading && provider.players.isEmpty)
-                      _buildLoadingState()
-                    else if (provider.errorMessage != null &&
-                        provider.players.isEmpty)
-                      _buildErrorState(provider)
-                    else if (players.isEmpty)
-                      _buildEmptyState()
-                    else if (isMobile)
-                      _buildPlayerList(players)
-                    else
-                      _buildPlayerGrid(players, isDesktop ? 3 : 2),
+                                  _buildAddButton(),
+                                  const SizedBox(height: 24),
 
-                    if (provider.isLoading && provider.players.isNotEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
+                                  _buildPlayerSummary(players.length),
+                                  const SizedBox(height: 16),
+
+                                  if (provider.isLoading &&
+                                      provider.players.isEmpty)
+                                    _buildLoadingState()
+                                  else if (provider.errorMessage != null &&
+                                      provider.players.isEmpty)
+                                    _buildErrorState(provider)
+                                  else if (players.isEmpty)
+                                    _buildEmptyState()
+                                  else if (isMobile)
+                                    _buildPlayerList(players)
+                                  else
+                                    _buildPlayerGrid(
+                                      players,
+                                      isDesktop ? 3 : 2,
+                                    ),
+
+                                  if (provider.isLoading &&
+                                      provider.players.isNotEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: navy,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // HEADER
+  // ==========================================
+  // TRANSPARENT HEADER
+  // ==========================================
+
   Widget _buildHeader(bool isMobile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Daftar Pemain',
-          style: TextStyle(
-            fontSize: isMobile ? 22 : 26,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        left: 8,
+        right: 20,
+        top: isMobile ? 8 : 12,
+        bottom: isMobile ? 12 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.background.withValues(alpha: 0.96),
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.border.withValues(alpha: 0.65),
+            width: 0.8,
           ),
         ),
-        const SizedBox(height: 6),
-        const Text(
-          'Kelola seluruh anggota tim Anda.',
-          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-        ),
-      ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+            tooltip: 'Kembali',
+            icon: const Icon(Icons.arrow_back_rounded, color: navy, size: 23),
+          ),
+
+          const SizedBox(width: 8),
+
+          Expanded(
+            child: Text(
+              'Daftar Pemain',
+              style: TextStyle(
+                fontSize: isMobile ? 22 : 26,
+                fontWeight: FontWeight.w700,
+                color: navy,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: navy.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.groups_rounded, color: navy, size: 21),
+          ),
+        ],
+      ),
     );
   }
 
+  // ==========================================
   // SEARCH
+  // ==========================================
+
   Widget _buildSearchField() {
     return TextField(
       controller: _searchController,
@@ -164,7 +259,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // POSITION FILTER
+  // ==========================================
+
   Widget _buildPositionFilter() {
     return SizedBox(
       height: 38,
@@ -202,7 +300,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // ADD PLAYER BUTTON
+  // ==========================================
+
   Widget _buildAddButton() {
     return Align(
       alignment: Alignment.centerRight,
@@ -228,7 +329,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // PLAYER SUMMARY
+  // ==========================================
+
   Widget _buildPlayerSummary(int count) {
     return Row(
       children: [
@@ -250,7 +354,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // LOADING STATE
+  // ==========================================
+
   Widget _buildLoadingState() {
     return const Center(
       child: Padding(
@@ -260,7 +367,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // ERROR STATE
+  // ==========================================
+
   Widget _buildErrorState(PlayerProvider provider) {
     return Container(
       width: double.infinity,
@@ -274,6 +384,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
         children: [
           const Icon(Icons.error_outline_rounded, size: 42, color: Colors.red),
           const SizedBox(height: 12),
+
           const Text(
             'Gagal Memuat Pemain',
             style: TextStyle(
@@ -282,13 +393,17 @@ class _PlayersScreenState extends State<PlayersScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
+
           const SizedBox(height: 6),
+
           Text(
             provider.errorMessage ?? 'Terjadi kesalahan.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
+
           const SizedBox(height: 16),
+
           OutlinedButton.icon(
             onPressed: provider.isLoading
                 ? null
@@ -301,7 +416,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // EMPTY STATE
+  // ==========================================
+
   Widget _buildEmptyState() {
     return Container(
       width: double.infinity,
@@ -319,6 +437,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
             color: AppTheme.textSecondary,
           ),
           SizedBox(height: 12),
+
           Text(
             'Pemain tidak ditemukan',
             style: TextStyle(
@@ -327,7 +446,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
               color: AppTheme.textPrimary,
             ),
           ),
+
           SizedBox(height: 6),
+
           Text(
             'Belum ada pemain atau data tidak sesuai dengan pencarian.',
             textAlign: TextAlign.center,
@@ -338,7 +459,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
-  // MOBILE LIST
+  // ==========================================
+  // MOBILE PLAYER LIST
+  // ==========================================
+
   Widget _buildPlayerList(List<PlayerModel> players) {
     return ListView.separated(
       shrinkWrap: true,
@@ -351,7 +475,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
+  // ==========================================
   // TABLET & DESKTOP GRID
+  // ==========================================
+
   Widget _buildPlayerGrid(List<PlayerModel> players, int columns) {
     return GridView.builder(
       shrinkWrap: true,
@@ -361,7 +488,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
         crossAxisCount: columns,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        mainAxisExtent: 118,
+        mainAxisExtent: 160,
       ),
       itemBuilder: (context, index) {
         return _PlayerCard(player: players[index]);
@@ -373,10 +500,94 @@ class _PlayersScreenState extends State<PlayersScreen> {
 // ==========================================
 // PLAYER CARD
 // ==========================================
+
 class _PlayerCard extends StatelessWidget {
   final PlayerModel player;
 
   const _PlayerCard({required this.player});
+
+  // KONFIRMASI HAPUS
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.background,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Hapus Pemain?',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus ${player.name} dari daftar pemain? Tindakan ini tidak dapat dibatalkan.',
+            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
+              ),
+              child: const Text('Ya, Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final success = await context.read<PlayerProvider>().deletePlayer(
+      player.id,
+    );
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? '${player.name} berhasil dihapus.'
+              : 'Gagal menghapus pemain: ${context.read<PlayerProvider>().errorMessage ?? "Terjadi kesalahan."}',
+        ),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  // EDIT PLAYER
+
+  void _editPlayer(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EditPlayerScreen(player: player)),
+    );
+  }
+
+  // BUILD CARD
 
   @override
   Widget build(BuildContext context) {
@@ -397,9 +608,10 @@ class _PlayerCard extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // FOTO PEMAIN
           Container(
-            width: 48,
-            height: 48,
+            width: 76,
+            height: 100,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppTheme.surface,
@@ -409,8 +621,8 @@ class _PlayerCard extends StatelessWidget {
             child: player.photoUrl != null && player.photoUrl!.isNotEmpty
                 ? Image.network(
                     player.photoUrl!,
-                    width: 48,
-                    height: 48,
+                    width: 76,
+                    height: 100,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) {
                       return _buildInitials(initials);
@@ -418,8 +630,10 @@ class _PlayerCard extends StatelessWidget {
                   )
                 : _buildInitials(initials),
           ),
-          const SizedBox(width: 12),
 
+          const SizedBox(width: 14),
+
+          // INFORMASI PEMAIN
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -431,11 +645,13 @@ class _PlayerCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
                   ),
                 ),
+
                 const SizedBox(height: 5),
+
                 Text(
                   player.position,
                   maxLines: 1,
@@ -445,7 +661,9 @@ class _PlayerCard extends StatelessWidget {
                     color: AppTheme.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 5),
+
+                const SizedBox(height: 3),
+
                 Text(
                   '${player.height} cm',
                   style: const TextStyle(
@@ -453,61 +671,61 @@ class _PlayerCard extends StatelessWidget {
                     color: AppTheme.textSecondary,
                   ),
                 ),
+
+                const SizedBox(height: 3),
+
+                Text(
+                  '${player.jerseyNumber}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.navy,
+                  ),
+                ),
               ],
             ),
           ),
 
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
 
+          // ACTION ICONS
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '#${player.jerseyNumber}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+              IconButton(
+                onPressed: () => _editPlayer(context),
+                tooltip: 'Edit pemain',
+                icon: const Icon(
+                  Icons.edit_rounded,
+                  size: 19,
                   color: AppTheme.navy,
                 ),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppTheme.surface,
+                  fixedSize: const Size(36, 36),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
               ),
+
               const SizedBox(height: 6),
 
-              // TOMBOL EDIT
-              SizedBox(
-                height: 30,
-                child: OutlinedButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EditPlayerScreen(player: player),
-                      ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.navy,
-                    side: const BorderSide(color: AppTheme.border),
-                    padding: const EdgeInsets.symmetric(horizontal: 9),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.edit_rounded, size: 12),
-                      SizedBox(width: 4),
-                      Text(
-                        'Edit',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+              IconButton(
+                onPressed: () => _confirmDelete(context),
+                tooltip: 'Hapus pemain',
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 19,
+                  color: Colors.red,
+                ),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.red.withValues(alpha: 0.07),
+                  fixedSize: const Size(36, 36),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -518,13 +736,15 @@ class _PlayerCard extends StatelessWidget {
     );
   }
 
+  // INITIALS FOTO
+
   Widget _buildInitials(String initials) {
     return Center(
       child: Text(
         initials.isEmpty ? '?' : initials,
         style: const TextStyle(
           color: AppTheme.navy,
-          fontSize: 14,
+          fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
       ),

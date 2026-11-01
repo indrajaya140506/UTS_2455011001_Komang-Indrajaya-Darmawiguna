@@ -120,4 +120,21 @@ class PlayerService {
 
     return PlayerModel.fromJson(response);
   }
+
+  // ==========================================
+  // DELETE DATA PEMAIN
+  // ==========================================
+  Future<void> deletePlayer(String id) async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Silakan login terlebih dahulu.');
+    }
+
+    await _supabase
+        .from('players')
+        .delete()
+        .eq('id', id)
+        .eq('club_id', user.id);
+  }
 }

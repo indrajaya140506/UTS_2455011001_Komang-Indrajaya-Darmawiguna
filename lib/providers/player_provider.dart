@@ -93,7 +93,6 @@ class PlayerProvider extends ChangeNotifier {
     try {
       String? photoUrl = player.photoUrl;
 
-      // Upload foto baru jika dipilih
       if (photo != null) {
         photoUrl = await _service.uploadPlayerPhoto(photo);
       }
@@ -109,10 +108,8 @@ class PlayerProvider extends ChangeNotifier {
         photoUrl: photoUrl,
       );
 
-      // Update ke database Supabase
       final updatedPlayer = await _repository.updatePlayer(updatedPlayerData);
 
-      // Perbarui state lokal
       final index = _players.indexWhere((item) => item.id == updatedPlayer.id);
 
       if (index != -1) {
@@ -122,6 +119,31 @@ class PlayerProvider extends ChangeNotifier {
       _players.sort(
         (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
       );
+
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ==========================================
+  // DELETE DATA PEMAIN
+  // ==========================================
+  Future<bool> deletePlayer(String id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // Hapus data dari Supabase.
+      await _repository.deletePlayer(id);
+
+      // Hapus dari state lokal jika Supabase berhasil.
+      _players.removeWhere((player) => player.id == id);
 
       return true;
     } catch (e) {
@@ -153,15 +175,6 @@ class PlayerProvider extends ChangeNotifier {
       _players[index] = updatedPlayer;
       notifyListeners();
     }
-  }
-
-  // ==========================================
-  // DELETE DATA PEMAIN
-  // ==========================================
-  void deletePlayer(String id) {
-    _players.removeWhere((player) => player.id == id);
-
-    notifyListeners();
   }
 
   // ==========================================
