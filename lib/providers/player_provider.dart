@@ -7,6 +7,7 @@ import '../services/player_service.dart';
 
 class PlayerProvider extends ChangeNotifier {
   final PlayerService _service = PlayerService();
+
   late final PlayerRepository _repository = PlayerRepository(_service);
 
   List<PlayerModel> _players = [];
@@ -48,12 +49,10 @@ class PlayerProvider extends ChangeNotifier {
     try {
       String? photoUrl = player.photoUrl;
 
-      // Upload foto ke Supabase Storage jika dipilih
       if (photo != null) {
         photoUrl = await _service.uploadPlayerPhoto(photo);
       }
 
-      // Buat objek pemain dengan URL foto
       final playerWithPhoto = PlayerModel(
         id: player.id,
         name: player.name,
@@ -65,12 +64,61 @@ class PlayerProvider extends ChangeNotifier {
         photoUrl: photoUrl,
       );
 
-      // Simpan data pemain ke database
       final newPlayer = await _repository.createPlayer(playerWithPhoto);
 
       _players.add(newPlayer);
 
-      // Urutkan pemain berdasarkan nama
+      _players.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ==========================================
+  // EDIT PEMAIN + UPLOAD FOTO BARU
+  // ==========================================
+  Future<bool> editPlayer(PlayerModel player, {XFile? photo}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      String? photoUrl = player.photoUrl;
+
+      // Upload foto baru jika dipilih
+      if (photo != null) {
+        photoUrl = await _service.uploadPlayerPhoto(photo);
+      }
+
+      final updatedPlayerData = PlayerModel(
+        id: player.id,
+        name: player.name,
+        jerseyNumber: player.jerseyNumber,
+        position: player.position,
+        height: player.height,
+        countryName: player.countryName,
+        countryCode: player.countryCode,
+        photoUrl: photoUrl,
+      );
+
+      // Update ke database Supabase
+      final updatedPlayer = await _repository.updatePlayer(updatedPlayerData);
+
+      // Perbarui state lokal
+      final index = _players.indexWhere((item) => item.id == updatedPlayer.id);
+
+      if (index != -1) {
+        _players[index] = updatedPlayer;
+      }
+
       _players.sort(
         (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
       );
@@ -94,7 +142,7 @@ class PlayerProvider extends ChangeNotifier {
   }
 
   // ==========================================
-  // UPDATE DATA PEMAIN
+  // UPDATE STATE PEMAIN LOKAL
   // ==========================================
   void updatePlayer(PlayerModel updatedPlayer) {
     final index = _players.indexWhere(
@@ -112,6 +160,7 @@ class PlayerProvider extends ChangeNotifier {
   // ==========================================
   void deletePlayer(String id) {
     _players.removeWhere((player) => player.id == id);
+
     notifyListeners();
   }
 

@@ -6,6 +6,7 @@ import '../../models/player_model.dart';
 import '../../providers/player_provider.dart';
 import '../../widgets/layout/responsive_layout.dart';
 import 'add_player_screen.dart';
+import 'edit_player_screen.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -369,7 +370,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 }
 
+// ==========================================
 // PLAYER CARD
+// ==========================================
 class _PlayerCard extends StatelessWidget {
   final PlayerModel player;
 
@@ -402,22 +405,21 @@ class _PlayerCard extends StatelessWidget {
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(14),
             ),
+            clipBehavior: Clip.antiAlias,
             child: player.photoUrl != null && player.photoUrl!.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.network(
-                      player.photoUrl!,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) {
-                        return _buildInitials(initials);
-                      },
-                    ),
+                ? Image.network(
+                    player.photoUrl!,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) {
+                      return _buildInitials(initials);
+                    },
                   )
                 : _buildInitials(initials),
           ),
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -454,14 +456,62 @@ class _PlayerCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '#${player.jerseyNumber}',
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.navy,
-            ),
+
+          const SizedBox(width: 6),
+
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '#${player.jerseyNumber}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.navy,
+                ),
+              ),
+              const SizedBox(height: 6),
+
+              // TOMBOL EDIT
+              SizedBox(
+                height: 30,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditPlayerScreen(player: player),
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.navy,
+                    side: const BorderSide(color: AppTheme.border),
+                    padding: const EdgeInsets.symmetric(horizontal: 9),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

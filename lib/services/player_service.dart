@@ -58,11 +58,7 @@ class PlayerService {
             ),
           );
 
-      final photoUrl = _supabase.storage
-          .from('player-photos')
-          .getPublicUrl(filePath);
-
-      return photoUrl;
+      return _supabase.storage.from('player-photos').getPublicUrl(filePath);
     } catch (e) {
       throw Exception('Gagal mengunggah foto pemain: $e');
     }
@@ -90,6 +86,35 @@ class PlayerService {
           'country_code': player.countryCode,
           'photo_url': player.photoUrl,
         })
+        .select()
+        .single();
+
+    return PlayerModel.fromJson(response);
+  }
+
+  // ==========================================
+  // UPDATE DATA PEMAIN
+  // ==========================================
+  Future<PlayerModel> updatePlayer(PlayerModel player) async {
+    final user = _supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('Silakan login terlebih dahulu.');
+    }
+
+    final response = await _supabase
+        .from('players')
+        .update({
+          'name': player.name,
+          'jersey_number': player.jerseyNumber,
+          'position': player.position,
+          'height': player.height,
+          'country_name': player.countryName,
+          'country_code': player.countryCode,
+          'photo_url': player.photoUrl,
+        })
+        .eq('id', player.id)
+        .eq('club_id', user.id)
         .select()
         .single();
 
