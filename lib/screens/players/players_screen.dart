@@ -7,6 +7,9 @@ import '../../providers/player_provider.dart';
 import '../../widgets/layout/responsive_layout.dart';
 import 'add_player_screen.dart';
 import 'edit_player_screen.dart';
+import 'player_detail_screen.dart';
+import '../../widgets/common/section_header.dart';
+import '../main_navigation_screen.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -199,11 +202,15 @@ class _PlayersScreenState extends State<PlayersScreen> {
         children: [
           IconButton(
             onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MainNavigationScreen(),
+                ),
+                (route) => false,
+              );
             },
-            tooltip: 'Kembali',
+            tooltip: 'Kembali ke Dashboard',
             icon: const Icon(Icons.arrow_back_rounded, color: navy, size: 23),
           ),
 
@@ -213,10 +220,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
             child: Text(
               'Daftar Pemain',
               style: TextStyle(
-                fontSize: isMobile ? 22 : 26,
-                fontWeight: FontWeight.w700,
+                fontSize: isMobile ? 20 : 23,
+                fontWeight: FontWeight.w600,
                 color: navy,
-                letterSpacing: -0.3,
+                letterSpacing: -0.4,
               ),
             ),
           ),
@@ -334,23 +341,17 @@ class _PlayersScreenState extends State<PlayersScreen> {
   // ==========================================
 
   Widget _buildPlayerSummary(int count) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Text(
-            'Anggota Tim',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
-            ),
-          ),
+    return SectionHeader(
+      title: 'Anggota Tim',
+      subtitle: 'Kelola tim anda!.',
+      trailing: Text(
+        '$count pemain',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textSecondary,
         ),
-        Text(
-          '$count pemain',
-          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-        ),
-      ],
+      ),
     );
   }
 
@@ -506,6 +507,15 @@ class _PlayerCard extends StatelessWidget {
 
   const _PlayerCard({required this.player});
 
+  // DETAIL PLAYER
+
+  void _openDetail(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => PlayerDetailScreen(player: player)),
+    );
+  }
+
   // KONFIRMASI HAPUS
 
   Future<void> _confirmDelete(BuildContext context) async {
@@ -599,139 +609,146 @@ class _PlayerCard extends StatelessWidget {
         .map((word) => word[0].toUpperCase())
         .join();
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.background,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openDetail(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          // FOTO PEMAIN
-          Container(
-            width: 76,
-            height: 100,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: player.photoUrl != null && player.photoUrl!.isNotEmpty
-                ? Image.network(
-                    player.photoUrl!,
-                    width: 76,
-                    height: 100,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
-                      return _buildInitials(initials);
-                    },
-                  )
-                : _buildInitials(initials),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppTheme.background,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.border),
           ),
-
-          const SizedBox(width: 14),
-
-          // INFORMASI PEMAIN
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                Text(
-                  player.position,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  '${player.height} cm',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-
-                const SizedBox(height: 3),
-
-                Text(
-                  '${player.jerseyNumber}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.navy,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // ACTION ICONS
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
             children: [
-              IconButton(
-                onPressed: () => _editPlayer(context),
-                tooltip: 'Edit pemain',
-                icon: const Icon(
-                  Icons.edit_rounded,
-                  size: 19,
-                  color: AppTheme.navy,
+              // FOTO PEMAIN
+              Container(
+                width: 76,
+                height: 100,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                style: IconButton.styleFrom(
-                  backgroundColor: AppTheme.surface,
-                  fixedSize: const Size(36, 36),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                clipBehavior: Clip.antiAlias,
+                child: player.photoUrl != null && player.photoUrl!.isNotEmpty
+                    ? Image.network(
+                        player.photoUrl!,
+                        width: 76,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) {
+                          return _buildInitials(initials);
+                        },
+                      )
+                    : _buildInitials(initials),
+              ),
+
+              const SizedBox(width: 14),
+
+              // INFORMASI PEMAIN
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      player.position,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      '${player.height} cm',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      '${player.jerseyNumber}',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.navy,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(width: 8),
 
-              IconButton(
-                onPressed: () => _confirmDelete(context),
-                tooltip: 'Hapus pemain',
-                icon: const Icon(
-                  Icons.delete_outline_rounded,
-                  size: 19,
-                  color: Colors.red,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.red.withValues(alpha: 0.07),
-                  fixedSize: const Size(36, 36),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              // ACTION ICONS
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () => _editPlayer(context),
+                    tooltip: 'Edit pemain',
+                    icon: const Icon(
+                      Icons.edit_rounded,
+                      size: 19,
+                      color: AppTheme.navy,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppTheme.surface,
+                      fixedSize: const Size(36, 36),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
-                ),
+
+                  const SizedBox(height: 6),
+
+                  IconButton(
+                    onPressed: () => _confirmDelete(context),
+                    tooltip: 'Hapus pemain',
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 19,
+                      color: Colors.red,
+                    ),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.red.withValues(alpha: 0.07),
+                      fixedSize: const Size(36, 36),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

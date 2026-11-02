@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/layout/responsive_layout.dart';
 import '../../providers/club_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../players/favorite_players_screen.dart';
 
 class TeamProfileScreen extends StatefulWidget {
   final String clubName;
@@ -34,6 +36,87 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
       if (!mounted) return;
       context.read<ClubProvider>().fetchClub();
     });
+  }
+
+  // NAVIGASI KE HALAMAN PEMAIN FAVORIT
+  void _openFavoritePlayers() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const FavoritePlayersScreen()),
+    );
+  }
+
+  // KONFIRMASI LOGOUT
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: const Text(
+            'Konfirmasi Logout',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          content: const Text(
+            'Apakah Anda yakin ingin keluar dari akun VCLUB?',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text(
+                'Batal',
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade700,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final authProvider = context.read<AuthProvider>();
+
+    await authProvider.logout();
+
+    if (!mounted) return;
+
+    if (authProvider.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage!),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    // Jika berhasil, AuthGate otomatis mengarahkan ke LoginScreen.
   }
 
   @override
@@ -106,7 +189,11 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
               child: Column(
                 children: [
                   _buildPageHeader(),
-                  _buildClubHeader(isMobile, clubName, coachName, logoUrl),
+
+                  // HEADER KLUB
+                  _buildClubHeader(isMobile, clubName, logoUrl),
+
+                  // INFORMASI KLUB TERMASUK PEMAIN FAVORIT
                   _buildInformationPanel(clubName, coachName, description),
                 ],
               ),
@@ -128,13 +215,22 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           ),
           const SizedBox(width: 8),
-          const Text(
-            'Profile Team',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w700,
+          const Expanded(
+            child: Text(
+              'Profile Team',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+          ),
+
+          // TOMBOL LOGOUT
+          IconButton(
+            tooltip: 'Logout',
+            onPressed: _confirmLogout,
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
           ),
         ],
       ),
@@ -142,12 +238,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
   }
 
   // HEADER PROFIL KLUB
-  Widget _buildClubHeader(
-    bool isMobile,
-    String clubName,
-    String coachName,
-    String? logoUrl,
-  ) {
+  Widget _buildClubHeader(bool isMobile, String clubName, String? logoUrl) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -169,7 +260,9 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
             ),
             child: ClipOval(child: _buildLogo(logoUrl)),
           ),
+
           const SizedBox(height: 20),
+
           Text(
             clubName,
             textAlign: TextAlign.center,
@@ -179,20 +272,6 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            coachName,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 3),
-          const Text(
-            'Pelatih Klub',
-            style: TextStyle(color: Color(0xFFB8C8D9), fontSize: 12),
           ),
         ],
       ),
@@ -233,7 +312,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
     );
   }
 
-  // PANEL INFORMASI
+  // PANEL INFORMASI KLUB
   Widget _buildInformationPanel(
     String clubName,
     String coachName,
@@ -259,26 +338,43 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
                 color: AppTheme.textPrimary,
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // NAMA KLUB
             _buildInformationItem(
               icon: Icons.groups_outlined,
               title: 'Nama Klub',
               value: clubName,
             ),
+
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Divider(height: 1, color: AppTheme.border),
             ),
+
+            // NAMA PELATIH
             _buildInformationItem(
               icon: Icons.person_outline_rounded,
               title: 'Nama Pelatih',
               value: coachName,
             ),
+
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Divider(height: 1, color: AppTheme.border),
+            ),
+
+            // PEMAIN FAVORIT
+            _buildFavoriteItem(),
+
+            // DESKRIPSI KLUB
             if (description.isNotEmpty) ...[
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 20),
                 child: Divider(height: 1, color: AppTheme.border),
               ),
+
               _buildInformationItem(
                 icon: Icons.description_outlined,
                 title: 'Deskripsi Klub',
@@ -287,6 +383,63 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // ITEM PEMAIN FAVORIT
+  Widget _buildFavoriteItem() {
+    return InkWell(
+      onTap: _openFavoritePlayers,
+      borderRadius: BorderRadius.circular(13),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFE9ED),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(
+              Icons.favorite_rounded,
+              color: Color(0xFFE85D75),
+              size: 22,
+            ),
+          ),
+
+          const SizedBox(width: 15),
+
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pemain Favorit',
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+
+                SizedBox(height: 5),
+
+                Text(
+                  'Daftar pemain favorit',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Icon(
+            Icons.chevron_right_rounded,
+            color: AppTheme.textSecondary,
+            size: 22,
+          ),
+        ],
       ),
     );
   }
@@ -309,7 +462,9 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
           ),
           child: Icon(icon, color: AppTheme.navy, size: 22),
         ),
+
         const SizedBox(width: 15),
+
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,7 +476,9 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
                   color: AppTheme.textSecondary,
                 ),
               ),
+
               const SizedBox(height: 5),
+
               Text(
                 value,
                 style: const TextStyle(
@@ -333,6 +490,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
             ],
           ),
         ),
+
         const Icon(
           Icons.chevron_right_rounded,
           color: AppTheme.textSecondary,

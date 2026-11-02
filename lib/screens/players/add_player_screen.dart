@@ -9,6 +9,8 @@ import '../../models/player_model.dart';
 import '../../models/country_model.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/country_provider.dart';
+import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/custom_text_field.dart';
 
 class AddPlayerScreen extends StatefulWidget {
   const AddPlayerScreen({super.key});
@@ -174,15 +176,12 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
                     _buildPhotoPicker(),
                     const SizedBox(height: 24),
 
-                    _buildLabel('Nama Pemain'),
-                    const SizedBox(height: 8),
-                    TextFormField(
+                    CustomTextField(
+                      label: 'Nama Pemain',
+                      hintText: 'Masukkan nama pemain',
                       controller: _nameController,
+                      prefixIcon: Icons.person_outline_rounded,
                       textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        hintText: 'Masukkan nama pemain',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
-                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Nama pemain wajib diisi.';
@@ -193,15 +192,12 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
 
                     const SizedBox(height: 18),
 
-                    _buildLabel('Nomor Punggung'),
-                    const SizedBox(height: 8),
-                    TextFormField(
+                    CustomTextField(
+                      label: 'Nomor Punggung',
+                      hintText: 'Contoh: 7',
                       controller: _numberController,
+                      prefixIcon: Icons.numbers_rounded,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        hintText: 'Contoh: 7',
-                        prefixIcon: Icon(Icons.numbers_rounded),
-                      ),
                       validator: (value) {
                         final number = int.tryParse(value ?? '');
 
@@ -248,18 +244,15 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
 
                     const SizedBox(height: 18),
 
-                    _buildLabel('Tinggi Badan (cm)'),
-                    const SizedBox(height: 8),
-                    TextFormField(
+                    CustomTextField(
+                      label: 'Tinggi Badan (cm)',
+                      hintText: 'Contoh: 175',
                       controller: _heightController,
+                      prefixIcon: Icons.height_rounded,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(
-                        hintText: 'Contoh: 175',
-                        prefixIcon: Icon(Icons.height_rounded),
-                        suffixText: 'cm',
-                      ),
+                      suffixText: 'cm',
                       validator: (value) {
                         final height = double.tryParse(
                           (value ?? '').replaceAll(',', '.'),
@@ -283,35 +276,13 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
 
                     Consumer<PlayerProvider>(
                       builder: (context, provider, child) {
-                        return SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            onPressed: provider.isLoading ? null : _savePlayer,
-                            icon: provider.isLoading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_rounded),
-                            label: Text(
-                              provider.isLoading
-                                  ? 'Menyimpan...'
-                                  : 'Simpan Pemain',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.navy,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
+                        return CustomButton(
+                          text: provider.isLoading
+                              ? 'Menyimpan...'
+                              : 'Simpan Pemain',
+                          icon: Icons.save_rounded,
+                          isLoading: provider.isLoading,
+                          onPressed: _savePlayer,
                         );
                       },
                     ),

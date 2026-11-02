@@ -30,6 +30,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       },
     ),
     TeamProfileScreen(
+      clubName: '',
+      coachName: '',
       onBackToAttendance: () {
         _onDestinationSelected(2);
       },
@@ -38,7 +40,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<NavigationItem> _navigationItems = const [
     NavigationItem(
-      label: 'Dashboard',
+      label: 'Home',
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
     ),

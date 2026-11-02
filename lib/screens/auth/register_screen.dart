@@ -29,6 +29,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _isPickingLogo = false;
 
+  static const Color _navy = Color(0xFF142B4A);
+  static const Color _white = Colors.white;
+
   @override
   void dispose() {
     _clubController.dispose();
@@ -96,8 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
 
     if (success) {
-      // Mengakhiri sesi setelah registrasi agar pengguna
-      // dapat masuk melalui halaman Login.
       await authProvider.logout();
 
       if (!mounted) return;
@@ -125,6 +126,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  // Bagian header VCLUB.
+  Widget _buildHero({required bool compact}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: compact ? 32 : 45,
+      ),
+      decoration: const BoxDecoration(color: _navy),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: compact ? 92 : 112,
+            height: compact ? 92 : 112,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.10),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withOpacity(0.15),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.sports_volleyball_rounded,
+              size: compact ? 58 : 72,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Daftar Akun VCLUB',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: compact ? 20 : 25,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Input field.
   Widget _buildInput({
     required String label,
@@ -143,17 +189,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
+            color: _navy,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 9),
         TextFormField(
           controller: controller,
           obscureText: isPassword && _obscurePassword,
           textInputAction: textInputAction,
+          style: const TextStyle(fontSize: 13, color: _navy),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20),
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+            prefixIcon: Icon(icon, size: 19, color: const Color(0xFF8995A5)),
             suffixIcon: isPassword
                 ? IconButton(
                     onPressed: () {
@@ -165,10 +213,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       _obscurePassword
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      size: 20,
+                      size: 19,
+                      color: const Color(0xFF8995A5),
                     ),
                   )
                 : null,
+            filled: true,
+            fillColor: const Color(0xFFF7F9FB),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 17,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: Color(0xFFEDF0F3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: _navy, width: 1.3),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(13),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
           ),
           validator: validator,
         ),
@@ -181,64 +256,68 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Row(
       children: [
         Container(
-          width: 76,
-          height: 76,
+          width: 68,
+          height: 68,
           decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppTheme.border),
+            color: const Color(0xFFF7F9FB),
+            borderRadius: BorderRadius.circular(13),
+            border: Border.all(color: const Color(0xFFEDF0F3)),
           ),
           child: _selectedLogoBytes != null
               ? ClipRRect(
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(12),
                   child: Image.memory(_selectedLogoBytes!, fit: BoxFit.cover),
                 )
               : const Icon(
                   Icons.image_outlined,
-                  size: 30,
-                  color: AppTheme.textSecondary,
+                  size: 27,
+                  color: Color(0xFF8995A5),
                 ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _selectedLogoBytes == null ? 'Logo Klub' : 'Logo Terpilih',
-                style: const TextStyle(
-                  fontSize: 14,
+              const Text(
+                'Logo Club',
+                style: TextStyle(
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+                  color: _navy,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 7),
               OutlinedButton.icon(
                 onPressed: _isPickingLogo ? null : _pickLogo,
-                icon: const Icon(Icons.file_upload_outlined, size: 18),
+                icon: _isPickingLogo
+                    ? const SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload_rounded, size: 16),
                 label: Text(
                   _isPickingLogo
                       ? 'Memilih...'
                       : _selectedLogoBytes == null
                       ? 'Pilih Logo'
                       : 'Ganti Logo',
+                  style: const TextStyle(fontSize: 12),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.navy,
-                  side: const BorderSide(color: AppTheme.border),
+                  foregroundColor: _navy,
+                  side: const BorderSide(color: Color(0xFFDCE2E9)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+                    horizontal: 12,
+                    vertical: 9,
                   ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Format gambar PNG atau JPG',
-                style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -249,291 +328,251 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // Form pendaftaran.
   Widget _buildRegisterForm() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Buat Akun',
-              style: TextStyle(
-                fontSize: 21,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Buat Akun',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+              color: _navy,
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Lengkapi informasi klub untuk memulai.',
-              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-            ),
-            const SizedBox(height: 24),
+          ),
+          const SizedBox(height: 8),
 
-            _buildLogoPicker(),
-
-            const SizedBox(height: 24),
-
-            _buildInput(
-              label: 'Nama Klub',
-              hint: 'Masukkan nama klub',
-              icon: Icons.groups_outlined,
-              controller: _clubController,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Nama klub wajib diisi';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 18),
-
-            _buildInput(
-              label: 'Nama Pelatih',
-              hint: 'Masukkan nama pelatih',
-              icon: Icons.person_outline_rounded,
-              controller: _coachController,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Nama pelatih wajib diisi';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 18),
-
-            _buildInput(
-              label: 'Password',
-              hint: 'Minimal 6 karakter',
-              icon: Icons.lock_outline_rounded,
-              controller: _passwordController,
-              isPassword: true,
-              textInputAction: TextInputAction.done,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password wajib diisi';
-                }
-
-                if (value.length < 6) {
-                  return 'Password minimal 6 karakter';
-                }
-
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 28),
-
-            Consumer<AuthProvider>(
-              builder: (context, auth, child) {
-                return SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: auth.isLoading || _isPickingLogo
-                        ? null
-                        : _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.navy,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: auth.isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Daftar Sekarang',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                );
-              },
-            ),
-
-            const SizedBox(height: 18),
-
-            Center(
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
+          Consumer<AuthProvider>(
+            builder: (context, auth, child) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
                     'Sudah punya akun?',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Color(0xFF858D99)),
                   ),
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                      );
-                    },
+                    onPressed: auth.isLoading
+                        ? null
+                        : () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginScreen(),
+                              ),
+                            );
+                          },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.only(left: 5),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     child: const Text(
                       'Masuk',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.navy,
+                        color: _navy,
                       ),
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              );
+            },
+          ),
 
-  // Informasi VCLUB untuk layout lebar.
-  Widget _buildBrandSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 58,
-          height: 58,
-          decoration: BoxDecoration(
-            color: AppTheme.navy,
-            borderRadius: BorderRadius.circular(16),
+          const SizedBox(height: 27),
+
+          _buildLogoPicker(),
+
+          const SizedBox(height: 24),
+
+          _buildInput(
+            label: 'Nama Club',
+            hint: 'Masukkan nama Club',
+            icon: Icons.groups_outlined,
+            controller: _clubController,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Nama klub wajib diisi';
+              }
+              return null;
+            },
           ),
-          child: const Icon(
-            Icons.sports_volleyball_rounded,
-            color: Colors.white,
-            size: 32,
+
+          const SizedBox(height: 18),
+
+          _buildInput(
+            label: 'Nama Pelatih',
+            hint: 'Masukkan nama pelatih',
+            icon: Icons.person_outline_rounded,
+            controller: _coachController,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Nama pelatih wajib diisi';
+              }
+              return null;
+            },
           ),
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'VCLUB',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2,
-            color: AppTheme.navy,
+
+          const SizedBox(height: 18),
+
+          _buildInput(
+            label: 'Password',
+            hint: 'Minimal 6 karakter',
+            icon: Icons.lock_outline_rounded,
+            controller: _passwordController,
+            isPassword: true,
+            textInputAction: TextInputAction.done,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Password wajib diisi';
+              }
+
+              if (value.length < 6) {
+                return 'Password minimal 6 karakter';
+              }
+
+              return null;
+            },
           ),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          'Manage Your Team.\nElevate Your Game.',
-          style: TextStyle(
-            fontSize: 25,
-            height: 1.4,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+
+          const SizedBox(height: 28),
+
+          Consumer<AuthProvider>(
+            builder: (context, auth, child) {
+              return SizedBox(
+                width: double.infinity,
+                height: 51,
+                child: ElevatedButton(
+                  onPressed: auth.isLoading || _isPickingLogo
+                      ? null
+                      : _register,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _navy,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: _navy.withOpacity(0.6),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  child: auth.isLoading
+                      ? const SizedBox(
+                          width: 21,
+                          height: 21,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Daftar Sekarang',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              );
+            },
           ),
-        ),
-        const SizedBox(height: 14),
-        const Text(
-          'Satu tempat untuk mengelola pemain, '
-          'memantau kehadiran, dan mengembangkan '
-          'klub voli Anda.',
-          style: TextStyle(
-            fontSize: 13,
-            height: 1.8,
-            color: AppTheme.textSecondary,
+
+          const SizedBox(height: 22),
+
+          const Row(
+            children: [
+              Expanded(child: Divider(color: Color(0xFFEDF0F3))),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'VCLUB',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                    color: Color(0xFFA0A8B3),
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: Color(0xFFEDF0F3))),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        backgroundColor: AppTheme.background,
-        elevation: 0,
-        title: const Text(
-          'Daftar Klub',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-      ),
+      backgroundColor: _navy,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final bool isWide = constraints.maxWidth >= 760;
+            final isWide = constraints.maxWidth >= 760;
 
-            return SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWide ? 32 : 20,
-                vertical: 24,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1000),
-                  child: isWide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 48),
-                                child: _buildBrandSection(),
-                              ),
+            if (isWide) {
+              return Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(32),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1000),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 30,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildHero(compact: false)),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(42),
+                              child: _buildRegisterForm(),
                             ),
-                            Expanded(child: _buildRegisterForm()),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Bergabung dengan VCLUB',
-                              style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Daftarkan klub Anda dan mulai kelola '
-                              'tim dengan lebih mudah.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                height: 1.6,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            _buildRegisterForm(),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              );
+            }
+
+            return Column(
+              children: [
+                _buildHero(compact: true),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(26, 27, 26, 20),
+                    decoration: const BoxDecoration(
+                      color: _white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: _buildRegisterForm(),
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),

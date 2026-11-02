@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:typed_data';
+
 import '../models/auth_model.dart';
 import '../services/auth_services.dart';
 
@@ -11,25 +14,52 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  late final StreamSubscription<AuthState> _authSubscription;
+
   AuthModel? get user => _user;
   bool get isAuthenticated => _user != null;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Mengubah data user Supabase menjadi AuthModel.
-  void _setAuthenticatedUser(User user) {
-    _user = AuthModel.fromJson({
+  AuthProvider() {
+    // Pulihkan sesi yang tersimpan saat aplikasi dibuka.
+    final currentUser = Supabase.instance.client.auth.currentUser;
+
+    if (currentUser != null) {
+      _user = _createAuthModel(currentUser);
+    }
+
+    // Pantau perubahan status autentikasi Supabase.
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) {
+      final user = data.session?.user;
+
+      if (user != null) {
+        _user = _createAuthModel(user);
+      } else {
+        _user = null;
+      }
+
+      notifyListeners();
+    });
+  }
+
+  AuthModel _createAuthModel(User user) {
+    return AuthModel.fromJson({
       'user_id': user.id,
       'email': user.email ?? '',
       'created_at': user.createdAt,
       'last_sign_in_at': user.lastSignInAt,
     });
+  }
 
+  void _setAuthenticatedUser(User user) {
+    _user = _createAuthModel(user);
     notifyListeners();
   }
 
   // REGISTER
-
   Future<bool> register({
     required String clubName,
     required String password,
@@ -85,13 +115,12 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // MEMULIHKAN SESSION SAAT APLIKASI DIBUKA
+  // MEMULIHKAN SESSION
   Future<void> restoreSession() async {
     final user = Supabase.instance.client.auth.currentUser;
 
-    if (user != null) {
-      _setAuthenticatedUser(user);
-    }
+    _user = user != null ? _createAuthModel(user) : null;
+    notifyListeners();
   }
 
   // LOGOUT
@@ -111,7 +140,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // METHOD UNTUK KOMPATIBILITAS DENGAN KODE LAMA
+  // KOMPATIBILITAS DENGAN KODE LAMA
   void setUser(AuthModel? user) {
     _user = user;
     notifyListeners();
@@ -125,5 +154,11 @@ class AuthProvider extends ChangeNotifier {
   void setError(String? message) {
     _errorMessage = message;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSubscription.cancel();
+    super.dispose();
   }
 }
