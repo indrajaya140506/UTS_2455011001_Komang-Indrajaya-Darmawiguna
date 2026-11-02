@@ -9,6 +9,7 @@ import '../../models/player_model.dart';
 import '../../models/country_model.dart';
 import '../../providers/player_provider.dart';
 import '../../providers/country_provider.dart';
+import '../../widgets/common/global_loader.dart';
 
 class EditPlayerScreen extends StatefulWidget {
   final PlayerModel player;
@@ -175,9 +176,16 @@ class _EditPlayerScreenState extends State<EditPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSaving = context.watch<PlayerProvider>().isLoading;
+
+    if (isSaving) {
+      return const FullScreenLoader(message: 'Memperbarui data pemain...');
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
+        // Lanjutkan kode AppBar kamu seperti sebelumnya.
         backgroundColor: AppTheme.background,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppTheme.navy),
@@ -323,21 +331,8 @@ class _EditPlayerScreenState extends State<EditPlayerScreen> {
                           height: 50,
                           child: ElevatedButton.icon(
                             onPressed: provider.isLoading ? null : _saveChanges,
-                            icon: provider.isLoading
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_rounded),
-                            label: Text(
-                              provider.isLoading
-                                  ? 'Menyimpan...'
-                                  : 'Simpan Perubahan',
-                            ),
+                            icon: const Icon(Icons.save_rounded),
+                            label: const Text('Simpan Perubahan'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.navy,
                               foregroundColor: Colors.white,

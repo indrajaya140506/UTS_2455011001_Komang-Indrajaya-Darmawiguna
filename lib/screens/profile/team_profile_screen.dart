@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../widgets/layout/responsive_layout.dart';
 import '../../providers/club_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/common/global_loader.dart';
 import '../players/favorite_players_screen.dart';
 
 class TeamProfileScreen extends StatefulWidget {
@@ -28,6 +29,8 @@ class TeamProfileScreen extends StatefulWidget {
 }
 
 class _TeamProfileScreenState extends State<TeamProfileScreen> {
+  bool _isLoggingOut = false;
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +103,16 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
 
     if (confirmed != true || !mounted) return;
 
+    // TAMPILKAN GLOBAL LOADER
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    // PASTIKAN LOADER SUDAH DIRENDER
+    await WidgetsBinding.instance.endOfFrame;
+
+    if (!mounted) return;
+
     final authProvider = context.read<AuthProvider>();
 
     await authProvider.logout();
@@ -107,6 +120,11 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
     if (!mounted) return;
 
     if (authProvider.errorMessage != null) {
+      // HENTIKAN LOADING JIKA LOGOUT GAGAL
+      setState(() {
+        _isLoggingOut = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.errorMessage!),
@@ -121,6 +139,14 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // GLOBAL LOADER SAAT LOGOUT
+    if (_isLoggingOut) {
+      return const FullScreenLoader(
+        message: 'Sedang keluar dari akun...',
+        showBrand: true,
+      );
+    }
+
     final isMobile = ResponsiveLayout.isMobile(context);
 
     return Consumer<ClubProvider>(

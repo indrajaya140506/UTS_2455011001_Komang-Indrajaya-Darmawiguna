@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../widgets/layout/responsive_layout.dart';
 import '../../providers/weather_provider.dart';
 import '../../widgets/common/section_header.dart';
+import '../../widgets/common/global_loader.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String nickname;
@@ -138,6 +139,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Tampilkan global loading sebelum dashboard siap.
+    if (_isLoadingSummary) {
+      return const Scaffold(
+        body: GlobalLoader(message: 'Menyiapkan Home..', showBrand: true),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -170,6 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 14),
                   _buildPlayerSummary(),
+
                   const SizedBox(height: 24),
                 ],
               ),

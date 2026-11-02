@@ -11,6 +11,7 @@ import '../../providers/player_provider.dart';
 import '../../providers/country_provider.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
+import '../../widgets/common/global_loader.dart';
 
 class AddPlayerScreen extends StatefulWidget {
   const AddPlayerScreen({super.key});
@@ -143,6 +144,12 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSaving = context.watch<PlayerProvider>().isLoading;
+
+    if (isSaving) {
+      return const FullScreenLoader(message: 'Menambahkan pemain...');
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -277,12 +284,10 @@ class _AddPlayerScreenState extends State<AddPlayerScreen> {
                     Consumer<PlayerProvider>(
                       builder: (context, provider, child) {
                         return CustomButton(
-                          text: provider.isLoading
-                              ? 'Menyimpan...'
-                              : 'Simpan Pemain',
+                          text: 'Simpan Pemain',
                           icon: Icons.save_rounded,
-                          isLoading: provider.isLoading,
-                          onPressed: _savePlayer,
+                          isLoading: false,
+                          onPressed: provider.isLoading ? null : _savePlayer,
                         );
                       },
                     ),
