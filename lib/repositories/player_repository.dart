@@ -6,22 +6,22 @@ class PlayerRepository {
 
   PlayerRepository(this._playerService);
 
-  // GET
+  // Get
   Future<List<PlayerModel>> getPlayers() {
     return _playerService.getPlayers();
   }
 
-  // CREATE
+  // Create
   Future<PlayerModel> createPlayer(PlayerModel player) {
     return _playerService.createPlayer(player);
   }
 
-  // UPDATE
+  // Update
   Future<PlayerModel> updatePlayer(PlayerModel player) {
     return _playerService.updatePlayer(player);
   }
 
-  // DELETE
+  // Delete
   Future<void> deletePlayer(String id) {
     return _playerService.deletePlayer(id);
   }

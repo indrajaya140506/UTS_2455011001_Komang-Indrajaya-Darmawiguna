@@ -22,14 +22,12 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   AuthProvider() {
-    // Pulihkan sesi yang tersimpan saat aplikasi dibuka.
     final currentUser = Supabase.instance.client.auth.currentUser;
 
     if (currentUser != null) {
       _user = _createAuthModel(currentUser);
     }
 
-    // Pantau perubahan status autentikasi Supabase.
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
       data,
     ) {
@@ -59,7 +57,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // REGISTER
+  // Register
   Future<bool> register({
     required String clubName,
     required String password,
@@ -80,6 +78,14 @@ class AuthProvider extends ChangeNotifier {
 
       _setAuthenticatedUser(user);
       return true;
+    } on AuthException catch (e) {
+      if (e.code == 'user_already_exists') {
+        _errorMessage = 'Email sudah terdaftar. Silakan login.';
+      } else {
+        _errorMessage = e.message;
+      }
+
+      return false;
     } catch (e) {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       return false;
@@ -89,7 +95,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // LOGIN
+  // Login
   Future<bool> login({
     required String clubName,
     required String password,
@@ -115,7 +121,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // MEMULIHKAN SESSION
   Future<void> restoreSession() async {
     final user = Supabase.instance.client.auth.currentUser;
 
@@ -123,7 +128,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // LOGOUT
+  // Logout
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();

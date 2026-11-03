@@ -51,6 +51,8 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
 
   // KONFIRMASI LOGOUT
   Future<void> _confirmLogout() async {
+    if (_isLoggingOut) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
@@ -115,26 +117,47 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
 
     final authProvider = context.read<AuthProvider>();
 
-    await authProvider.logout();
+    try {
+      // JALANKAN PROSES LOGOUT
+      await authProvider.logout();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (authProvider.errorMessage != null) {
-      // HENTIKAN LOADING JIKA LOGOUT GAGAL
+      // JIKA LOGOUT GAGAL
+      if (authProvider.errorMessage != null) {
+        setState(() {
+          _isLoggingOut = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage!),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        return;
+      }
+
+      // LOGOUT BERHASIL.
+      // AuthGate akan mendeteksi perubahan status autentikasi
+      // dan mengarahkan pengguna ke halaman Login.
+    } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _isLoggingOut = false;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage!),
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
-
-    // Jika berhasil, AuthGate otomatis mengarahkan ke LoginScreen.
   }
 
   @override
@@ -201,11 +224,8 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
         }
 
         final clubName = club?['club_name']?.toString() ?? widget.clubName;
-
         final coachName = club?['coach_name']?.toString() ?? widget.coachName;
-
         final logoUrl = club?['logo_url']?.toString();
-
         final description = club?['description']?.toString() ?? '';
 
         return Scaffold(
@@ -255,7 +275,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
           // TOMBOL LOGOUT
           IconButton(
             tooltip: 'Logout',
-            onPressed: _confirmLogout,
+            onPressed: _isLoggingOut ? null : _confirmLogout,
             icon: const Icon(Icons.logout_rounded, color: Colors.white),
           ),
         ],

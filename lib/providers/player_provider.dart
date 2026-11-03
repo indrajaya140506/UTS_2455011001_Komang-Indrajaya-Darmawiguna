@@ -20,9 +20,6 @@ class PlayerProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // ==========================================
-  // GET DATA PEMAIN
-  // ==========================================
   Future<void> fetchPlayers() async {
     _isLoading = true;
     _errorMessage = null;
@@ -38,9 +35,6 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================================
-  // TAMBAH PEMAIN + UPLOAD FOTO
-  // ==========================================
   Future<bool> addPlayer(PlayerModel player, {XFile? photo}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -82,9 +76,6 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================================
-  // EDIT PEMAIN + UPLOAD FOTO BARU
-  // ==========================================
   Future<bool> editPlayer(PlayerModel player, {XFile? photo}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -130,19 +121,14 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================================
-  // DELETE DATA PEMAIN
-  // ==========================================
   Future<bool> deletePlayer(String id) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      // Hapus data dari Supabase.
       await _repository.deletePlayer(id);
 
-      // Hapus dari state lokal jika Supabase berhasil.
       _players.removeWhere((player) => player.id == id);
 
       return true;
@@ -155,17 +141,11 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================================
-  // SET DATA PEMAIN
-  // ==========================================
   void setPlayers(List<PlayerModel> players) {
     _players = players;
     notifyListeners();
   }
 
-  // ==========================================
-  // UPDATE STATE PEMAIN LOKAL
-  // ==========================================
   void updatePlayer(PlayerModel updatedPlayer) {
     final index = _players.indexWhere(
       (player) => player.id == updatedPlayer.id,
@@ -177,17 +157,14 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  // ==========================================
-  // SET LOADING
-  // ==========================================
+  // Set Loading
   void setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  // ==========================================
-  // SET ERROR
-  // ==========================================
+  //Set Eror
+
   void setError(String? message) {
     _errorMessage = message;
     notifyListeners();
